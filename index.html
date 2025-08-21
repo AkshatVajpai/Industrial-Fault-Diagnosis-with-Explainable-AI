@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>xAI - Machine Failure Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23007acc;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234a90e2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='50' y='65' font-family='Inter,Arial,sans-serif' font-size='45' font-weight='700' text-anchor='middle' fill='url(%23grad)'%3ExAI%3C/text%3E%3C/svg%3E">
+    <style>
+        :root {
+            --background-dark: #0d1117;
+            --surface-dark: #161b22;
+            --primary-accent: #58a6ff;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-dark);
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 25px 25px;
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0; z-index: 10;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+        }
+
+        .navbar .nav-left { justify-self: start; opacity: 0.5; }
+        .navbar .nav-center {
+            justify-self: center;
+            text-align: center; /* Center text and logo */
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Style for the logo container below navbar */
+        .logo-container {
+            text-align: center;
+            padding: 1rem 0;
+            background-color: var(--background-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Style for the added logo */
+        .header-logo {
+            display: block;
+            margin: 0 auto;
+            width: 150px;
+            height: 150px;
+            object-fit: contain; /* Maintain aspect ratio */
+        }
+
+        /* widened so the form keeps its size while adding a right column */
+        .container {
+            max-width: 1120px; /* was 800px */
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 { font-size: 2.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .header p { font-size: 1.1rem; color: var(--text-secondary); }
+
+        /* NEW: two-column layout holding the form (left) and features (right) */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px; /* form stays flexible; features fixed */
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .form-card {
+            background-color: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+        }
+
+        /* NEW: Features card */
+        .features-card {
+            background-color: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            position: sticky;
+            top: 88px; /* below navbar */
+        }
+
+        .features-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .features-list {
+            list-style: none;
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .features-list li {
+            display: grid;
+            grid-template-columns: 24px 1fr;
+            gap: 0.65rem;
+            align-items: start;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
+
+        .features-list .icon {
+            width: 24px; height: 24px;
+            display: inline-grid; place-items: center;
+            border-radius: 6px;
+            background: rgba(88,166,255,0.12);
+            border: 1px solid rgba(88,166,255,0.35);
+        }
+        .features-list .icon svg { width: 14px; height: 14px; fill: var(--primary-accent); }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-secondary); }
+
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 1rem;
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+
+        select {
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238b949e' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 1rem center;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        
+        /* NEW: Styling for the button group */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .submit-btn {
+            width: 100%; padding: 1rem;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: background-color 0.2s ease;
+        }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #predictBtn {
+            background-color: var(--primary-accent); color: var(--background-dark);
+        }
+        #predictBtn:hover { background-color: #79c0ff; }
+
+        #compareBtn {
+            background-color: var(--surface-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        #compareBtn:hover { background-color: #222831; }
+
+
+        .loading { display: none; text-align: center; margin-top: 1.5rem; }
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-accent);
+            border-radius: 50%; width: 30px; height: 30px;
+            animation: spin 1s linear infinite; margin: 0 auto 0.5rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+
+        .error {
+            background-color: rgba(248, 131, 121, 0.1);
+            color: #f88379; padding: 1rem; border-radius: 8px; margin-top: 1.5rem;
+            border: 1px solid rgba(248, 131, 121, 0.5); display: none;
+        }
+
+        /* Responsive: stack on smaller screens */
+        @media (max-width: 1024px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .features-card { position: static; }
+        }
+
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .form-card { padding: 1.5rem; }
+            .features-card { padding: 1.25rem; }
+            .container { margin: 1rem auto; }
+            .navbar { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+        </div>
+        <div class="nav-center">
+            xAI
+        </div>
+    </nav>
+
+    <!-- ONGC Logo positioned below navbar -->
+    <div class="logo-container">
+        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/9a/ONGC_Logo.svg/800px-ONGC_Logo.svg.png" alt="ONGC Logo" class="header-logo">
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Check for Equipment Failures      </h1>
+            <p> Equipment failure prediction using Explainable AI</p>
+        </div>
+
+        <!-- NEW: two-column wrapper -->
+        <div class="content-grid">
+            <!-- LEFT: your original form card (unchanged size/styles) -->
+            <div class="form-card">
+                <form id="predictionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="air_temperature">Air Temperature [K]</label>
+                            <input type="number" id="air_temperature" name="Air temperature [K]" step="0.1" required value="300.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="process_temperature">Process Temperature [K]</label>
+                            <input type="number" id="process_temperature" name="Process temperature [K]" step="0.1" required value="310.0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rotational_speed">Rotational Speed [rpm]</label>
+                            <input type="number" id="rotational_speed" name="Rotational speed [rpm]" step="1" required value="1500">
+                        </div>
+                        <div class="form-group">
+                            <label for="torque">Torque [Nm]</label>
+                            <input type="number" id="torque" name="Torque [Nm]" step="0.1" required value="40.0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tool_wear">Tool Wear [min]</label>
+                            <input type="number" id="tool_wear" name="Tool wear [min]" step="1" required value="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="equipment_type">Equipment Type</label>
+                            <select id="equipment_type" name="equipment_type" required>
+                                <option value="L">L - Low</option>
+                                <option value="M" selected>M - Medium</option>
+                                <option value="H">H - High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="model_selection">Select Model (for single prediction)</label>
+                        <select id="model_selection" name="model_name" required>
+                            <option value="xgboost" selected>XGBoost (Recommended)</option>
+                            <option value="logistic_regression">Logistic Regression</option>
+                        </select>
+                    </div>
+                    
+                    <!-- MODIFIED: Button group for both actions -->
+                    <div class="button-group">
+                        <button type="submit" class="submit-btn" id="predictBtn">Predict Failure</button>
+                        <button type="button" class="submit-btn" id="compareBtn">Compare Models</button>
+                    </div>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing sensor data...</p>
+                </div>
+                <div class="error" id="error"></div>
+            </div>
+
+            <!-- RIGHT: features card -->
+            <aside class="features-card" aria-label="Key features">
+                <h3>About Project</h3>
+                <ul class="features-list">
+                    <li>
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"></path></svg>
+                        </span>
+                        <span><strong>Dual Model Support</strong><br/>XGBoost (best performance) &amp; Logistic Regression (fast, simple).</span>
+                    </li>
+                    <li>
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"></path></svg>
+                        </span>
+                        <span><strong>Explainable AI</strong><br/>SHAP plots reveal feature impact behind each prediction.</span>
+                    </li>
+                    <li>
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"></path></svg>
+                        </span>
+                        <span><strong>Real-time Predictions</strong><br/>Snappy web UI &amp; REST API for instant results.</span>
+                    </li>
+                    <li>
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"></path></svg>
+                        </span>
+                        <span><strong>Handles Imbalance</strong><br/>SMOTE oversampling boosts minority failure detection.</span>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const predictBtn = document.getElementById('predictBtn');
+        const compareBtn = document.getElementById('compareBtn'); // NEW
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+
+        function getFeatures() {
+            const formData = new FormData(form);
+            return {
+                'Air temperature [K]': parseFloat(formData.get('Air temperature [K]')),
+                'Process temperature [K]': parseFloat(formData.get('Process temperature [K]')),
+                'Rotational speed [rpm]': parseFloat(formData.get('Rotational speed [rpm]')),
+                'Torque [Nm]': parseFloat(formData.get('Torque [Nm]')),
+                'Tool wear [min]': parseFloat(formData.get('Tool wear [min]')),
+                'Type_L': formData.get('equipment_type') === 'L' ? 1.0 : 0.0,
+                'Type_M': formData.get('equipment_type') === 'M' ? 1.0 : 0.0
+            };
+        }
+
+        // UNCHANGED: Your original prediction logic
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            error.style.display = 'none';
+            predictBtn.disabled = true;
+            compareBtn.disabled = true;
+            loading.style.display = 'block';
+
+            const features = getFeatures();
+            const modelName = new FormData(this).get('model_name');
+            const requestPayload = { model_name: modelName, features };
+
+            try {
+                const response = await fetch('/api/predict/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestPayload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Prediction failed');
+                }
+                const result = await response.json();
+                sessionStorage.setItem('predictionResult', JSON.stringify(result));
+                window.location.href = '/results';
+            } catch (err) {
+                console.error('Error:', err);
+                error.textContent = err.message || 'An error occurred during prediction';
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+                compareBtn.disabled = false;
+            }
+        });
+        
+        // NEW: Event listener for the compare button
+        compareBtn.addEventListener('click', async function() {
+            error.style.display = 'none';
+            predictBtn.disabled = true;
+            compareBtn.disabled = true;
+            loading.style.display = 'block';
+
+            const features = getFeatures();
+            const requestPayload = { features };
+            
+            console.log('Sending compare request:', requestPayload);
+
+            try {
+                const response = await fetch('/api/compare/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestPayload)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Server error:', errorData);
+                    throw new Error(errorData.detail || 'Comparison failed');
+                }
+                
+                const result = await response.json();
+                console.log('Compare result:', result);
+                sessionStorage.setItem('comparisonResult', JSON.stringify(result));
+                window.location.href = '/compare';
+            } catch (err) {
+                console.error('Error:', err);
+                error.textContent = err.message || 'An error occurred during comparison';
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+                compareBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

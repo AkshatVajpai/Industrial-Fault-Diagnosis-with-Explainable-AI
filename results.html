@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xAI - Prediction Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23007acc;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234a90e2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='50' y='65' font-family='Inter,Arial,sans-serif' font-size='45' font-weight='700' text-anchor='middle' fill='url(%23grad)'%3ExAI%3C/text%3E%3C/svg%3E">
+    <style>
+        :root {
+            --background-dark: #0d1117;
+            --surface-dark: #161b22;
+            --primary-accent: #58a6ff;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --color-fail: #f88379;
+            --color-normal: #56d375;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-dark);
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 25px 25px;
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .navbar {
+            background-color: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+        }
+        .navbar .nav-left { justify-self: start; }
+        .navbar .nav-center { justify-self: center; font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .back-arrow { color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s ease; }
+        .back-arrow:hover { opacity: 0.8; }
+        .container { max-width: 80%; margin: 2rem auto; padding: 0 1rem; }
+        .results-card {
+            background-color: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .prediction-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+            background-color: var(--background-dark);
+            border: 1px solid var(--border-color);
+        }
+        .prediction-fail { color: var(--color-fail); }
+        .prediction-normal { color: var(--color-normal); }
+        
+        .probabilities h3 { font-size: 1.2rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 1rem; }
+        .prob-bar-container { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--border-color); margin-bottom: 2.5rem; }
+        .prob-bar-fail { background-color: var(--color-fail); }
+        .prob-bar-normal { background-color: var(--color-normal); }
+        
+        .shap-section { border-top: 1px solid var(--border-color); padding-top: 2.5rem; }
+        .shap-section h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .shap-section p { color: var(--text-secondary); margin-bottom: 1.5rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+        
+        .shap-plot { 
+            width: 1600px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px; 
+            background-color: #fff; 
+            display: block;
+            margin: auto;
+        }
+
+        .guide-section {
+            margin-top: 2.5rem;
+            padding-top: 2.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .guide-section h3 { text-align: center; font-size: 1.5rem; margin-bottom: 1.5rem; }
+        .guide-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+        .guide-item .icon { font-size: 1.5rem; line-height: 1.5; }
+        .guide-item p { color: var(--text-secondary); line-height: 1.5; }
+        .guide-item p strong { color: var(--text-primary); font-weight: 500; }
+        
+        @media (max-width: 768px) {
+            .results-card { padding: 1.5rem; }
+            .container { margin: 1rem auto; }
+            .navbar { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/" class="back-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+            </a>
+        </div>
+        <div class="nav-center">xAI</div>
+    </nav>
+    <div class="container">
+        <div class="results-card" id="results-content">
+            </div>
+    </div>
+    <script>
+        window.addEventListener('load', () => {
+            const resultsContent = document.getElementById('results-content');
+            const resultDataString = sessionStorage.getItem('predictionResult');
+
+            if (!resultDataString) {
+                resultsContent.innerHTML = `
+                    <h2>No prediction data found.</h2>
+                    <p style="color: var(--text-secondary); margin-top: 1rem;">Please return to the main page to make a prediction.</p>
+                `;
+                return;
+            }
+
+            const result = JSON.parse(resultDataString);
+            const isFailure = result.prediction === 1;
+            const probNormal = result.prediction_probability[0];
+            const probFailure = result.prediction_probability[1];
+
+            resultsContent.innerHTML = `
+                <div class="prediction-box ${isFailure ? 'prediction-fail' : 'prediction-normal'}">
+                    ${isFailure ? 'Machine Failure Likely' : 'Normal Operation'}
+                </div>
+
+                <div class="probabilities">
+                    <h3>Prediction Probabilities</h3>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar-normal" style="width: ${probNormal * 100}%;" title="Normal: ${(probNormal * 100).toFixed(1)}%"></div>
+                        <div class="prob-bar-fail" style="width: ${probFailure * 100}%;" title="Failure: ${(probFailure * 100).toFixed(1)}%"></div>
+                    </div>
+                </div>
+
+                <div class="shap-section">
+                    <h3>Explanation of AI prediction</h3>
+                    
+                    <div style="background-color: rgba(88, 166, 255, 0.1); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--primary-accent);">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-accent);">Quick Summary:</h4>
+                        <p style="margin: 0; color: var(--text-secondary); line-height: 1.6;">
+                            Your equipment is predicted to operate safely because the overall sensor readings suggest normal conditions. 
+                            The chart below shows exactly how each sensor reading influenced this decision - 
+                            <span style="color: var(--color-fail);">red bars indicate risk factors</span>, 
+                            <span style="color: var(--primary-accent);">blue bars indicate safe conditions</span>.
+                        </p>
+                    </div>
+                    
+                    <img id="shap-plot" src="data:image/png;base64,${result.shap_plot}" alt="SHAP Explanation Plot" class="shap-plot"/>
+                </div>
+
+                <div class="guide-section">
+                    <h3>Understanding the Explanation Chart</h3>
+                    
+                    <div class="guide-item">
+                        <div class="icon" style="color: var(--color-fail);">🔴</div>
+                        <div>
+                            <p><strong>Red Bars (Push Right →):</strong> These are **risk factors** pushing the prediction towards **Failure**. Longer red bars have a stronger negative impact.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-item">
+                        <div class="icon" style="color: var(--primary-accent);">🔵</div>
+                        <div>
+                            <p><strong>Blue Bars (Push Left ←):</strong> These are **positive factors** pushing the prediction towards **Normal Operation**. Longer blue bars have a stronger positive impact.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-item">
+                        <div class="icon">-></div>
+                        <div>
+                            <p><strong>Base Value:</strong> This is the neutral starting point, representing the average prediction across all historical data before considering this specific machine's data.</p>
+                        </div>
+                    </div>
+
+                    <div class="guide-item">
+                        <div class="icon">-></div>
+                        <div>
+                            <p><strong>Final Score f(x):</strong> This is the final output after all factors are combined.
+                                <br>• A **negative score (< 0)** means the blue bars won, predicting **Normal Operation**.
+                                <br>• A **positive score (> 0)** means the red bars won, predicting a **Failure Risk**.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-item">
+                        <div class="icon">-></div>
+                        <div>
+                            <p><strong>Key Takeaway:</strong> The final prediction is a balance of all factors. Even if you see some red risk factors, the machine is predicted to be safe as long as the blue "safe" factors are stronger and pull the final score into the negative range.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
