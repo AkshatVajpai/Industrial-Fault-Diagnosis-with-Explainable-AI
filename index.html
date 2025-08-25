@@ -49,6 +49,123 @@
             font-weight: 700;
             color: var(--text-primary);
         }
+        .navbar .nav-right { justify-self: end; }
+
+        .btn { 
+            padding: 0.5rem 0.9rem; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            background: var(--surface-dark); 
+            color: var(--text-primary);
+        }
+        .btn-primary { 
+            border-color: rgba(88,166,255,0.35); 
+            background: rgba(88,166,255,0.12); 
+            color: var(--primary-accent);
+        }
+        .btn-danger { 
+            border-color: rgba(248, 131, 121, 0.5); 
+            background: rgba(248, 131, 121, 0.12); 
+            color: #f88379;
+        }
+        
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--surface-dark);
+            margin: 15% auto;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .close {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 1rem;
+            top: 0.5rem;
+        }
+
+        .close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .modal .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .modal .form-group input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--background-dark);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .modal .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+
+        .modal .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-accent);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal .submit-btn:hover {
+            background-color: #79c0ff;
+        }
+
+        .modal .error {
+            background-color: rgba(248, 131, 121, 0.1);
+            color: #f88379;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid rgba(248, 131, 121, 0.5);
+        }
 
         /* Style for the logo container below navbar */
         .logo-container {
@@ -228,7 +345,31 @@
         <div class="nav-center">
             xAI
         </div>
+        <div class="nav-right">
+            <button id="authBtn" class="btn btn-primary" aria-label="Login">Login</button>
+        </div>
     </nav>
+    
+    <!-- Include login modal -->
+    <div id="loginModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Username:</label>
+                    <input type="text" id="loginUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </input>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+            <div id="loginError" class="error" style="display: none;"></div>
+        </div>
+    </div>
 
     <!-- ONGC Logo positioned below navbar -->
     <div class="logo-container">
@@ -336,6 +477,144 @@
     </div>
 
     <script>
+        // --- PHP-based authentication ---
+        let currentUser = null;
+
+        function updateAuthButton() {
+            const btn = document.getElementById('authBtn');
+            if (!btn) return;
+            
+            if (currentUser && currentUser.username) {
+                btn.textContent = 'Logout';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-danger');
+                btn.title = `Logged in as ${currentUser.username}`;
+                btn.setAttribute('aria-label', 'Logout');
+            } else {
+                btn.textContent = 'Login';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-primary');
+                btn.title = 'Login to your account';
+                btn.setAttribute('aria-label', 'Login');
+            }
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('loginForm').reset();
+        }
+
+        function checkLoginStatus() {
+            const formData = new FormData();
+            formData.append('action', 'check');
+            
+            fetch('auth.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentUser = { username: data.username };
+                } else {
+                    currentUser = null;
+                }
+                updateAuthButton();
+            })
+            .catch(error => {
+                console.error('Error checking login status:', error);
+                currentUser = null;
+                updateAuthButton();
+            });
+        }
+
+        function login(username, password) {
+            const formData = new FormData();
+            formData.append('action', 'login');
+            formData.append('username', username);
+            formData.append('password', password);
+            
+            return fetch('auth.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json());
+        }
+
+        function logout() {
+            const formData = new FormData();
+            formData.append('action', 'logout');
+            
+            return fetch('auth.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json());
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('authBtn');
+            const modal = document.getElementById('loginModal');
+            const closeBtn = modal.querySelector('.close');
+            const loginForm = document.getElementById('loginForm');
+            
+            // Check login status on page load
+            checkLoginStatus();
+            
+            // Close modal when clicking X
+            closeBtn.addEventListener('click', hideLoginModal);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    hideLoginModal();
+                }
+            });
+            
+            // Handle login form submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(loginForm);
+                const username = formData.get('username');
+                const password = formData.get('password');
+                
+                try {
+                    const result = await login(username, password);
+                    if (result.success) {
+                        currentUser = { username: result.username };
+                        updateAuthButton();
+                        hideLoginModal();
+                    } else {
+                        document.getElementById('loginError').textContent = result.message || 'Login failed';
+                        document.getElementById('loginError').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    document.getElementById('loginError').textContent = 'An error occurred during login';
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            });
+            
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    if (currentUser && currentUser.username) {
+                        // Logout
+                        logout().then(() => {
+                            currentUser = null;
+                            updateAuthButton();
+                        });
+                    } else {
+                        // Show login modal
+                        showLoginModal();
+                    }
+                });
+            }
+        });
+
         const form = document.getElementById('predictionForm');
         const predictBtn = document.getElementById('predictBtn');
         const compareBtn = document.getElementById('compareBtn'); // NEW
