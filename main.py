@@ -5,6 +5,7 @@ import numpy as np
 import shap
 import xgboost as xgb
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from sklearn.linear_model import LogisticRegression
 import base64
@@ -16,6 +17,10 @@ from pydantic import BaseModel
 from typing import Dict, List
 
 app = FastAPI(title="xAI Prediction Server")
+
+# Serve static assets (CSS/JS)
+app.mount("/css", StaticFiles(directory="css"), name="css")
+app.mount("/js", StaticFiles(directory="js"), name="js")
 
 # --- Global variables to hold loaded models ---
 xgb_model = None

@@ -1,4 +1,3 @@
-
 CREATE DATABASE IF NOT EXISTS fault_diagnosis;
 USE fault_diagnosis;
 

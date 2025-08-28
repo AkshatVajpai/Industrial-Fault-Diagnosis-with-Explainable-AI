@@ -7,11 +7,11 @@
 2) Place project files
 - Copy the entire project folder to:
   - XAMPP: C:\xampp\htdocs\fault-diagnosis\
-- Ensure these files exist there: `index.html`, `results.html`, `compare.html`, `auth.php`, `setup_database.sql`
+- Ensure these files exist there: `index.html`, `results.html`, `compare.html`, `auth.php`, `employee database.sql`
 
 3) Create database and user
 - Open phpMyAdmin: http://localhost/phpmyadmin
-- Click Import → Choose `setup_database.sql` from the project folder → Go
+- Click Import → Choose `employee database.sql` from the project folder → Go
   - This creates DB `fault_diagnosis`, table `users`, and user: Abhishek/Abhishek
 
 4) Configure DB credentials (only if needed)
